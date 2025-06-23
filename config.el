@@ -87,9 +87,47 @@
 (global-set-key (kbd "C-4") 'centaur-tabs-backward)
 (global-set-key (kbd "C-6") 'centaur-tabs-forward)
 
-(global-set-key (kbd "C-9") 'indent-rigidly-right-to-tab-stop)
-(global-set-key (kbd "C-7") 'indent-rigidly-left-to-tab-stop)
+(defun nathan/unindent-region (start end &optional count)
+  "Unindent each line in region from START to END by COUNT spaces"
+  (interactive "r\nP")
+  (let ((count (or (and count (prefix-numeric-value count)) tab-width)))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region start end)
+        (goto-char (point-min))
+        (while (not (eobp))
+          (let ((i 0))
+            (while (and (< i count)
+                        (or (looking-at " ") (looking-at "\t")))
+              (delete-char 1)
+              (setq i (1+ i))))
+          (forward-line 1))))))
 
+
+
+(defun nathan/indent-region (start end &optional count)
+  "Indent each line in region from START to END by COUNT spaces"
+  (interactive "r\nP")
+  (let ((count (or (and count (prefix-numeric-value count)) tab-width))
+        (indent-string ""))
+    (setq indent-string (make-string count ?\s))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region start end)
+        (goto-char (point-min))
+        (while (not (eobp))
+          (insert indent-string)
+          (forward-line 1))))))
+
+
+
+
+
+
+;; Bindings globaux
+(map!
+ "C-M-9" #'nathan/indent-region
+ "C-M-7" #'nathan/unindent-region)
 
 
 (add-hook 'after-init-hook #'minimap-mode)
@@ -99,5 +137,5 @@
 
 
 (after! all-the-icons
-  (setf (alist-get "m" all-the-icons-icon-alist nil nil #'string=)
+  (setf (alist-get "m" all-the-icons-regexp-icon-alist nil nil #'string=)
         '(:icon (all-the-icons-fileicon "matlab") :face all-the-icons-yellow)))
